@@ -1,0 +1,161 @@
+// show app
+class App extends React.Component {
+
+  render() {
+    return (
+      <div>
+        <Header />
+        <D3data />
+        <About />
+        <Footer />
+      </div>
+    );
+  }
+}
+
+
+// Header code
+const Header =()=>{return (
+  <header>
+    <div className="container">
+      <h1>D3js Bar Chart</h1>
+    </div>
+  </header>
+  )}
+
+// Footer code
+const Footer = ()=>{return (
+  <footer>
+    <div id="dev" className="container">
+       Developer : <br/>
+      <a href="https://www.linkedin.com/in/thetradecoder/" className="nav-link" target="_blank">theTradeCoder</a>
+    </div>
+  </footer>
+  )}
+
+// About code
+const About = ()=>{return (
+<div id="about" className="container shadow">
+  <h2> About :</h2>
+  <p>
+    <a href="https://www.freecodecamp.org/" target="_blank"> - FCC Data Visualization Project</a><br/>
+    - Visualize Data with a Bar Chart <br/>
+    - A Reactjs and D3js project
+  </p>
+ </div>
+)}
+
+
+// D3data code
+class D3data extends React.Component {
+   
+  render() {
+    //loading API
+    const url = "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json";
+    const req = new XMLHttpRequest();
+    req.open("GET", url, true);
+    req.send();
+    req.onload = () => {
+      const json = JSON.parse(req.responseText);
+    // const jsonData =  JSON.stringify(json.data);
+    // console.log(jsonData);
+      const dataset = json.data;     
+      const dataDate = dataset.map((d) => new Date(d[0]));
+      const maxDate = d3.max(dataDate);
+      const minDate = d3.min(dataDate);
+      const dataGdp = dataset.map((d) => d[1]);
+      const maxGdp = d3.max(dataGdp);
+      const minGdp = d3.min(dataGdp);
+
+      const w = 579;
+      const h = 425;
+      const pad = 60;
+      //console.log(dataset.length)
+      const b = (w-100) / dataset.length;
+
+      const xScale = d3
+        .scaleTime()
+        .domain([minDate, maxDate])
+        .range([pad, w - pad]);
+
+      const yScale = d3
+        .scaleLinear()
+        .domain([0, maxGdp])
+        .range([(h-pad), pad]);
+      
+      const xAxis = d3.axisBottom(xScale);
+
+      const yAxis = d3.axisLeft(yScale);
+      
+
+      var svg = d3.select('#content').append('svg')
+        .attr("width", w)
+        .attr("height", h)
+        .style('background-color', 'silver');
+      
+      const tooltip  = d3.select('#content')
+      .append('div')
+      .attr('id', 'tooltip')
+      .style('opacity', 0);
+      
+      svg.selectAll('rect')
+      .data(dataset)
+      .enter()
+      .append('rect')
+      .attr('data-date', d=>d[0])
+      .attr('data-gdp', d=>d[1])
+      .attr('width', b)
+      .attr('height', d=>h-yScale(d[1])-pad)
+      .attr('x', (d, i)=>xScale(dataDate[i]))
+      .attr('y', (d, i)=>yScale(d[1]))
+      .attr('class', 'bar')
+      .on('mouseover', (d, i) => {
+        tooltip
+        .style('opacity', 1)
+        .attr('data-date', d[0])
+        .html(`${d[0]} <br> $ ${d[1]} Billion`)
+        .style('left', (d3.event.pageX + 10)+'px')
+        .style('top', (d3.event.pageY-60)+'px')
+        })
+        .on('mouseout', (d)=> {
+            tooltip.style('opacity', 0)
+        });
+     
+      svg.append('text')      
+      .text(`Data source: ${json.source_name}`)
+      .attr('id', 'data-source')
+      .attr('x', pad)
+      .attr('y', h-20);
+      
+      
+   svg.append('text')
+      .text(`U.S. GDP from ${json.from_date.slice(0,4)} to ${json.to_date.slice(0,4)} `)
+      .attr('id', 'title')
+      .attr('x', w/4)
+      .attr('y', 32);
+     
+    
+      
+      svg.append("g")
+        .attr("transform", "translate(0," + (h - pad) + ")")
+        .attr('id', 'x-axis')
+        .call(xAxis);
+
+      svg.append("g")
+        .attr("transform", "translate(" + pad + ", 0)")
+        .attr('id', 'y-axis')
+        .call(yAxis);
+    }
+    
+
+    return(
+      <div id="content">
+        
+      </div>
+    )    
+  }
+}
+
+
+// render the app
+ReactDOM.render(<App/>, document.getElementById("container"));
